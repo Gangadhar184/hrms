@@ -23,14 +23,14 @@ public interface EmployeeRepository extends JpaRepository<Employee, Long> {
     Optional<Employee> findByEmployeeId(String employeeId);
     boolean existsByUsername(String username);
     boolean existsByEmail(String email);
-    boolean existByEmployeeId(String employeeId);
+    boolean existsByEmployeeId(String employeeId);
     List<Employee> findByRole(Role role);
     List<Employee> findByManagerId(Long managerId);
 
     //find active eimployee reporting to manager
 
     @Query("SELECT e from Employee e WHERE e.manager.id = :managerId AND e.isActive = true")
-    List<Employee> findActiveEmployeeByManagerId(@Param("managerId") Long managerId);
+    List<Employee> findActiveEmployeesByManagerId(@Param("managerId") Long managerId);
 
     //find all active employees
     List<Employee> findByIsActiveTrue();

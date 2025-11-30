@@ -67,16 +67,84 @@ public class RefreshTokenService {
             throw new TokenRefreshException(token.getToken(),
                     "Refresh token has expired. Please login again");
         }
-
         if (token.getRevoked()) {
             throw new TokenRefreshException(token.getToken(),
                     "Refresh token has been revoked. Please login again");
         }
-
         return token;
     }
+    @Transactional
+    public void revokeToken(String token) {
+        log.debug("Revoking refresh token");
 
+        RefreshToken refreshToken = refreshTokenRepository.findByToken(token)
+                .orElseThrow(() -> new TokenRefreshException(token, "Refresh token not found"));
 
+        refreshToken.revoke();
+        refreshTokenRepository.save(refreshToken);
 
+        log.info("Refresh token revoked for employee: {}",
+                refreshToken.getEmployee().getUsername());
+    }
+    @Transactional
+    public void revokeAllTokensForEmployee(Long employeeId) {
+        log.debug("Revoking all tokens for employee ID: {}", employeeId);
 
+        refreshTokenRepository.revokeAllTokensByEmployeeId(employeeId);
+
+        log.info("All refresh tokens revoked for employee ID: {}", employeeId);
+    }
+    @Transactional
+    public int deleteExpiredTokens() {
+        log.debug("Deleting expired refresh tokens");
+
+        int countBefore = (int) refreshTokenRepository.count();
+        refreshTokenRepository.deleteExpiredTokens(LocalDateTime.now());
+        int countAfter = (int) refreshTokenRepository.count();
+
+        int deleted = countBefore - countAfter;
+        log.info("Deleted {} expired refresh tokens", deleted);
+
+        return deleted;
+    }
+    @Transactional
+    public int deleteRevokedTokens() {
+        log.debug("Deleting revoked refresh tokens");
+
+        int countBefore = (int) refreshTokenRepository.count();
+        refreshTokenRepository.deleteRevokedTokens();
+        int countAfter = (int) refreshTokenRepository.count();
+
+        int deleted = countBefore - countAfter;
+        log.info("Deleted {} revoked refresh tokens", deleted);
+
+        return deleted;
+    }
+    @Transactional(readOnly = true)
+    public long countValidTokensForEmployee(Long employeeId) {
+        return refreshTokenRepository.countValidTokensByEmployeeId(
+                employeeId, LocalDateTime.now());
+    }
+    @Transactional
+    public RefreshToken rotateRefreshToken(String oldToken) {
+        log.debug("Rotating refresh token");
+
+        RefreshToken oldRefreshToken = refreshTokenRepository.findByToken(oldToken)
+                .orElseThrow(() -> new TokenRefreshException(oldToken, "Refresh token not found"));
+
+        // Verify old token is valid
+        verifyExpiration(oldRefreshToken);
+
+        // Revoke old token
+        oldRefreshToken.revoke();
+        refreshTokenRepository.save(oldRefreshToken);
+
+        //Create new token
+        RefreshToken newToken = createRefreshToken(oldRefreshToken.getEmployee().getId());
+
+        log.info("Refresh token rotated for employee: {}",
+                oldRefreshToken.getEmployee().getUsername());
+
+        return newToken;
+    }
 }
