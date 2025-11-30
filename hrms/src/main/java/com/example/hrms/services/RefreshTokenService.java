@@ -25,9 +25,20 @@ public class RefreshTokenService {
     private final JwtTokenProvider jwtTokenProvider;
 
     /**
+     * Creates and stores a new refresh token for the specified employee.
      *
-     * @param employeeId
-     * @return
+     * <p>Steps:</p>
+     * <ol>
+     *     <li>Verify employee exists</li>
+     *     <li>Generate a random UUID token string</li>
+     *     <li>Calculate expiration date using configuration</li>
+     *     <li>Persist token in database</li>
+     * </ol>
+     *
+     * @param employeeId the ID of the employee for whom the token will be created
+     * @return the newly created {@link RefreshToken}
+     *
+     * @throws IllegalArgumentException if employee does not exist
      */
     @Transactional
     public RefreshToken createRefreshToken(Long employeeId) {
@@ -55,11 +66,31 @@ public class RefreshTokenService {
         return saved;
     }
 
+    /**
+     * Retrieves a refresh token entity by its token string.
+     *
+     * @param token the token value to search for
+     * @return an {@link Optional} containing the refresh token if found
+     */
     @Transactional(readOnly = true)
     public Optional<RefreshToken> findByToken(String token) {
         return refreshTokenRepository.findByToken(token);
     }
 
+    /**
+     * Validates a refresh token by checking:
+     * <ul>
+     *     <li>If the token has expired</li>
+     *     <li>If the token has been revoked</li>
+     * </ul>
+     *
+     * <p>Expired tokens are automatically deleted.</p>
+     *
+     * @param token the refresh token to validate
+     * @return the valid refresh token
+     *
+     * @throws TokenRefreshException if token is expired or revoked
+     */
     @Transactional
     public RefreshToken verifyExpiration(RefreshToken token) {
         if (token.isExpired()) {
@@ -73,6 +104,12 @@ public class RefreshTokenService {
         }
         return token;
     }
+    /**
+     * Revokes a refresh token, marking it as invalid for future use.
+     *
+     * @param token the token string to revoke
+     * @throws TokenRefreshException if token does not exist
+     */
     @Transactional
     public void revokeToken(String token) {
         log.debug("Revoking refresh token");
@@ -86,6 +123,11 @@ public class RefreshTokenService {
         log.info("Refresh token revoked for employee: {}",
                 refreshToken.getEmployee().getUsername());
     }
+    /**
+     * Revokes all refresh tokens associated with a specific employee.
+     *
+     * @param employeeId the employee ID whose tokens will be revoked
+     */
     @Transactional
     public void revokeAllTokensForEmployee(Long employeeId) {
         log.debug("Revoking all tokens for employee ID: {}", employeeId);
@@ -94,6 +136,11 @@ public class RefreshTokenService {
 
         log.info("All refresh tokens revoked for employee ID: {}", employeeId);
     }
+    /**
+     * Deletes all refresh tokens that are expired as of the current timestamp.
+     *
+     * @return the number of tokens deleted
+     */
     @Transactional
     public int deleteExpiredTokens() {
         log.debug("Deleting expired refresh tokens");
@@ -107,6 +154,11 @@ public class RefreshTokenService {
 
         return deleted;
     }
+    /**
+     * Deletes all refresh tokens that were previously revoked.
+     *
+     * @return the number of revoked tokens removed
+     */
     @Transactional
     public int deleteRevokedTokens() {
         log.debug("Deleting revoked refresh tokens");
@@ -120,11 +172,33 @@ public class RefreshTokenService {
 
         return deleted;
     }
+    /**
+     * Counts the number of valid (non-expired and non-revoked) refresh tokens
+     * belonging to a specific employee.
+     *
+     * @param employeeId the employee ID
+     * @return the count of valid tokens
+     */
     @Transactional(readOnly = true)
     public long countValidTokensForEmployee(Long employeeId) {
         return refreshTokenRepository.countValidTokensByEmployeeId(
                 employeeId, LocalDateTime.now());
     }
+    /**
+     * Rotates an existing refresh token by:
+     * <ol>
+     *     <li>Validating the old token</li>
+     *     <li>Revoking the old token</li>
+     *     <li>Creating a new refresh token</li>
+     * </ol>
+     *
+     * <p>Used for implementing refresh token rotation for improved security.</p>
+     *
+     * @param oldToken the token to rotate
+     * @return the newly generated refresh token
+     *
+     * @throws TokenRefreshException if the old token is invalid
+     */
     @Transactional
     public RefreshToken rotateRefreshToken(String oldToken) {
         log.debug("Rotating refresh token");
