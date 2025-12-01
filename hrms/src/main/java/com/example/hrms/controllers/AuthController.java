@@ -4,8 +4,7 @@ package com.example.hrms.controllers;
 import com.example.hrms.dto.*;
 import com.example.hrms.services.AuthService;
 import com.example.hrms.utils.SecurityUtils;
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.tags.Tag;
+
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -16,12 +15,11 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api/auth")
 @RequiredArgsConstructor
 @Slf4j
-@Tag(name = "Authentication", description = "Authentication and authorization endpoints")
 public class AuthController {
     private final AuthService authService;
 
     @PostMapping("/login")
-    @Operation(summary = "User login", description = "Authenticate user and return JWT tokens")
+
     public ResponseEntity<AuthResponse> login(@Valid @RequestBody LoginRequest loginRequest) {
         log.info("Login request received for username: {}", loginRequest.getUsername());
 
@@ -31,7 +29,7 @@ public class AuthController {
     }
 
     @PostMapping("/refresh")
-    @Operation(summary = "Refresh access token", description = "Get new access token using refresh token")
+
     public ResponseEntity<AuthResponse> refreshToken(
             @Valid @RequestBody RefreshTokenRequest request) {
         log.info("Token refresh request received");
@@ -42,7 +40,7 @@ public class AuthController {
     }
 
     @PostMapping("/logout")
-    @Operation(summary = "Logout", description = "Revoke refresh token and logout user")
+
     public ResponseEntity<MessageResponse> logout(@Valid @RequestBody LogoutRequest request) {
         log.info("Logout request received");
 
@@ -51,8 +49,7 @@ public class AuthController {
         return ResponseEntity.ok(response);
     }
     @PostMapping("/logout-all")
-    @Operation(summary = "Logout from all devices",
-            description = "Revoke all refresh tokens for current user")
+
     public ResponseEntity<MessageResponse> logoutFromAllDevices() {
         String username = SecurityUtils.getCurrentUsername()
                 .orElseThrow(() -> new IllegalStateException("User not authenticated"));
@@ -67,8 +64,7 @@ public class AuthController {
      * Reset password endpoint (for first-time login or password change)
      */
     @PostMapping("/reset-password")
-    @Operation(summary = "Reset password",
-            description = "Change password (required on first login)")
+
     public ResponseEntity<MessageResponse> resetPassword(
             @Valid @RequestBody ResetPasswordRequest request) {
         String username = SecurityUtils.getCurrentUsername()
@@ -84,8 +80,7 @@ public class AuthController {
      * Check if password reset is required
      */
     @GetMapping("/requires-password-reset")
-    @Operation(summary = "Check password reset requirement",
-            description = "Check if user needs to reset password on first login")
+
     public ResponseEntity<Boolean> requiresPasswordReset() {
         String username = SecurityUtils.getCurrentUsername()
                 .orElseThrow(() -> new IllegalStateException("User not authenticated"));
@@ -98,7 +93,6 @@ public class AuthController {
      * Health check endpoint
      */
     @GetMapping("/health")
-    @Operation(summary = "Health check", description = "Check if auth service is available")
     public ResponseEntity<MessageResponse> health() {
         return ResponseEntity.ok(new MessageResponse("Auth service is running"));
     }

@@ -1,0 +1,91 @@
+2025-12-01 15:14:55 [main] INFO  c.example.hrms.HrmsApplicationTests - Starting HrmsApplicationTests using Java 21.0.9 with PID 3152 (started by gangadhar in C:\hrms\hrms)
+2025-12-01 15:14:55 [main] INFO  c.example.hrms.HrmsApplicationTests - No active profile set, falling back to 1 default profile: "default"
+2025-12-01 15:14:57 [main] INFO  o.s.d.r.c.RepositoryConfigurationDelegate - Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2025-12-01 15:14:57 [main] INFO  o.s.d.r.c.RepositoryConfigurationDelegate - Finished Spring Data repository scanning in 174 ms. Found 7 JPA repository interfaces.
+2025-12-01 15:14:59 [main] INFO  o.h.jpa.internal.util.LogHelper - HHH000204: Processing PersistenceUnitInfo [name: default]
+2025-12-01 15:14:59 [main] INFO  org.hibernate.Version - HHH000412: Hibernate ORM core version 6.6.36.Final
+2025-12-01 15:14:59 [main] INFO  o.h.c.i.RegionFactoryInitiator - HHH000026: Second-level cache disabled
+2025-12-01 15:15:00 [main] INFO  o.s.o.j.p.SpringPersistenceUnitInfo - No LoadTimeWeaver setup: ignoring JPA class transformer
+2025-12-01 15:15:00 [main] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Starting...
+2025-12-01 15:15:00 [main] INFO  com.zaxxer.hikari.pool.HikariPool - HikariPool-1 - Added connection org.postgresql.jdbc.PgConnection@50c2ef56
+2025-12-01 15:15:00 [main] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Start completed.
+2025-12-01 15:15:00 [main] WARN  org.hibernate.orm.deprecation - HHH90000025: PostgreSQLDialect does not need to be specified explicitly using 'hibernate.dialect' (remove the property setting and it will be selected by default)
+2025-12-01 15:15:00 [main] INFO  o.hibernate.orm.connections.pooling - HHH10001005: Database info:
+	Database JDBC URL [Connecting through datasource 'HikariDataSource (HikariPool-1)']
+	Database driver: undefined/unknown
+	Database version: 17.7
+	Autocommit mode: undefined/unknown
+	Isolation level: undefined/unknown
+	Minimum pool size: undefined/unknown
+	Maximum pool size: undefined/unknown
+2025-12-01 15:15:02 [main] INFO  o.h.e.t.j.p.i.JtaPlatformInitiator - HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2025-12-01 15:15:02 [main] INFO  o.s.o.j.LocalContainerEntityManagerFactoryBean - Initialized JPA EntityManagerFactory for persistence unit 'default'
+2025-12-01 15:15:03 [main] INFO  o.s.d.j.r.query.QueryEnhancerFactory - Hibernate is in classpath; If applicable, HQL parser will be used.
+2025-12-01 15:15:05 [main] INFO  o.s.s.c.a.a.c.InitializeAuthenticationProviderBeanManagerConfigurer$InitializeAuthenticationProviderManagerConfigurer - Global AuthenticationManager configured with AuthenticationProvider bean with name authenticationProvider
+2025-12-01 15:15:05 [main] WARN  o.s.s.c.a.a.c.InitializeUserDetailsBeanManagerConfigurer$InitializeUserDetailsManagerConfigurer - Global AuthenticationManager configured with an AuthenticationProvider bean. UserDetailsService beans will not be used by Spring Security for automatically configuring username/password login. Consider removing the AuthenticationProvider bean. Alternatively, consider using the UserDetailsService in a manually instantiated DaoAuthenticationProvider. If the current configuration is intentional, to turn off this warning, increase the logging level of 'org.springframework.security.config.annotation.authentication.configuration.InitializeUserDetailsBeanManagerConfigurer' to ERROR
+2025-12-01 15:15:07 [main] INFO  o.s.b.a.e.web.EndpointLinksResolver - Exposing 3 endpoints beneath base path '/actuator'
+2025-12-01 15:15:07 [main] DEBUG o.s.s.web.DefaultSecurityFilterChain - Will secure any request with filters: DisableEncodeUrlFilter, WebAsyncManagerIntegrationFilter, SecurityContextHolderFilter, HeaderWriterFilter, CorsFilter, LogoutFilter, JwtAuthenticationFilter, RequestCacheAwareFilter, SecurityContextHolderAwareRequestFilter, AnonymousAuthenticationFilter, SessionManagementFilter, ExceptionTranslationFilter, AuthorizationFilter
+2025-12-01 15:15:08 [main] INFO  c.example.hrms.HrmsApplicationTests - Started HrmsApplicationTests in 13.311 seconds (process running for 16.167)
+2025-12-01 15:15:08 [main] DEBUG org.hibernate.SQL - 
+    select
+        e1_0.id,
+        e1_0.created_at,
+        e1_0.date_of_birth,
+        e1_0.email,
+        e1_0.employee_id,
+        e1_0.first_name,
+        e1_0.hire_date,
+        e1_0.is_active,
+        e1_0.is_first_login,
+        e1_0.last_name,
+        e1_0.manager_id,
+        e1_0.password,
+        e1_0.role,
+        e1_0.updated_at,
+        e1_0.username 
+    from
+        employees e1_0 
+    where
+        e1_0.username=?
+2025-12-01 15:15:08 [main] DEBUG org.hibernate.SQL - 
+    select
+        ci1_0.id,
+        ci1_0.address_line1,
+        ci1_0.address_line2,
+        ci1_0.city,
+        ci1_0.country,
+        ci1_0.created_at,
+        ci1_0.emergency_contact_name,
+        ci1_0.emergency_contact_phone,
+        ci1_0.employee_id,
+        ci1_0.mobile_number,
+        ci1_0.phone_number,
+        ci1_0.postal_code,
+        ci1_0.state,
+        ci1_0.updated_at 
+    from
+        contact_info ci1_0 
+    where
+        ci1_0.employee_id=?
+2025-12-01 15:15:08 [main] DEBUG org.hibernate.SQL - 
+    select
+        pi1_0.id,
+        pi1_0.account_number,
+        pi1_0.bank_name,
+        pi1_0.created_at,
+        pi1_0.employee_id,
+        pi1_0.hourly_rate,
+        pi1_0.pay_frequency,
+        pi1_0.payment_method,
+        pi1_0.routing_number,
+        pi1_0.salary,
+        pi1_0.tax_id,
+        pi1_0.updated_at 
+    from
+        pay_info pi1_0 
+    where
+        pi1_0.employee_id=?
+2025-12-01 15:15:08 [main] INFO  c.e.hrms.config.DataInitializer - Database already initialized. Skipping data initialization.
+2025-12-01 15:15:09 [SpringApplicationShutdownHook] INFO  o.s.o.j.LocalContainerEntityManagerFactoryBean - Closing JPA EntityManagerFactory for persistence unit 'default'
+2025-12-01 15:15:09 [SpringApplicationShutdownHook] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Shutdown initiated...
+2025-12-01 15:15:09 [SpringApplicationShutdownHook] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Shutdown completed.

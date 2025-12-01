@@ -71,7 +71,7 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
         configuration.setAllowedOrigins(Arrays.asList(
-                "http://localhost:3000",
+                "http://localhost:5173",
                 "http://localhost:4200",
                 "http://localhost:8080"
         ));
@@ -113,15 +113,6 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         // Public endpoints - Authentication
                         .requestMatchers("/api/auth/**").permitAll()
-
-                        // Swagger/OpenAPI endpoints (if using)
-                        .requestMatchers(
-                                "/v3/api-docs/**",
-                                "/swagger-ui/**",
-                                "/swagger-ui.html",
-                                "/swagger-resources/**",
-                                "/webjars/**"
-                        ).permitAll()
 
                         // Health check endpoints
                         .requestMatchers("/actuator/health").permitAll()

@@ -9,7 +9,6 @@ import org.springframework.security.core.AuthenticationException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
-import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.context.request.WebRequest;
 
@@ -21,211 +20,196 @@ import java.util.Map;
 @Slf4j
 public class GlobalExceptionHandler {
 
-    /**
-     * Handle validation errors
-     */
+    private String getPath(WebRequest request) {
+        return request.getDescription(false).replace("uri=", "");
+    }
+
+    // ------------------------------- VALIDATION ERRORS -------------------------------
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public ResponseEntity<ErrorResponse> handleValidationExceptions(
-            MethodArgumentNotValidException ex, WebRequest request) {
+    public ResponseEntity<ErrorResponse> handleValidationErrors(MethodArgumentNotValidException ex,
+                                                                WebRequest request) {
 
         Map<String, String> errors = new HashMap<>();
+
         ex.getBindingResult().getAllErrors().forEach(error -> {
-            String fieldName = ((FieldError) error).getField();
-            String errorMessage = error.getDefaultMessage();
-            errors.put(fieldName, errorMessage);
+            if (error instanceof FieldError fieldError) {
+                errors.put(fieldError.getField(), fieldError.getDefaultMessage());
+            } else {
+                errors.put(error.getObjectName(), error.getDefaultMessage());
+            }
         });
 
-        ErrorResponse errorResponse = ErrorResponse.builder()
+        ErrorResponse response = ErrorResponse.builder()
                 .timestamp(LocalDateTime.now())
                 .status(HttpStatus.BAD_REQUEST.value())
                 .error("Validation Failed")
                 .message("Input validation failed")
-                .path(request.getDescription(false).replace("uri=", ""))
+                .path(getPath(request))
                 .validationErrors(errors)
                 .build();
 
-        log.error("Validation error: {}", errors);
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
+        log.warn("Validation Error: {}", errors);
+
+        return ResponseEntity.badRequest().body(response);
     }
 
-    /**
-     * Handle ResourceNotFoundException
-     */
+    // ------------------------------- RESOURCE NOT FOUND -------------------------------
     @ExceptionHandler(ResourceNotFoundException.class)
-    @ResponseStatus(HttpStatus.NOT_FOUND)
-    public ResponseEntity<ErrorResponse> handleResourceNotFoundException(
-            ResourceNotFoundException ex, WebRequest request) {
+    public ResponseEntity<ErrorResponse> handleNotFound(ResourceNotFoundException ex,
+                                                        WebRequest request) {
 
-        ErrorResponse errorResponse = ErrorResponse.builder()
+        ErrorResponse response = ErrorResponse.builder()
                 .timestamp(LocalDateTime.now())
                 .status(HttpStatus.NOT_FOUND.value())
                 .error("Resource Not Found")
                 .message(ex.getMessage())
-                .path(request.getDescription(false).replace("uri=", ""))
+                .path(getPath(request))
                 .build();
 
-        log.error("Resource not found: {}", ex.getMessage());
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorResponse);
+        log.warn("Not Found: {}", ex.getMessage());
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
     }
 
-    /**
-     * Handle BadRequestException
-     */
+    // ------------------------------- BAD REQUEST -------------------------------
     @ExceptionHandler(BadRequestException.class)
-    @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public ResponseEntity<ErrorResponse> handleBadRequestException(
-            BadRequestException ex, WebRequest request) {
+    public ResponseEntity<ErrorResponse> handleBadRequest(BadRequestException ex,
+                                                          WebRequest request) {
 
-        ErrorResponse errorResponse = ErrorResponse.builder()
+        ErrorResponse response = ErrorResponse.builder()
                 .timestamp(LocalDateTime.now())
                 .status(HttpStatus.BAD_REQUEST.value())
                 .error("Bad Request")
                 .message(ex.getMessage())
-                .path(request.getDescription(false).replace("uri=", ""))
+                .path(getPath(request))
                 .build();
 
-        log.error("Bad request: {}", ex.getMessage());
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
+        log.warn("Bad Request: {}", ex.getMessage());
+        return ResponseEntity.badRequest().body(response);
     }
 
-    /**
-     * Handle UnauthorizedException
-     */
-    @ExceptionHandler(UnauthorizedException.class)
-    @ResponseStatus(HttpStatus.UNAUTHORIZED)
-    public ResponseEntity<ErrorResponse> handleUnauthorizedException(
-            UnauthorizedException ex, WebRequest request) {
+    // ------------------------------- UNAUTHORIZED -------------------------------
+    @ExceptionHandler({UnauthorizedException.class})
+    public ResponseEntity<ErrorResponse> handleUnauthorized(UnauthorizedException ex,
+                                                            WebRequest request) {
 
-        ErrorResponse errorResponse = ErrorResponse.builder()
+        ErrorResponse response = ErrorResponse.builder()
                 .timestamp(LocalDateTime.now())
                 .status(HttpStatus.UNAUTHORIZED.value())
                 .error("Unauthorized")
                 .message(ex.getMessage())
-                .path(request.getDescription(false).replace("uri=", ""))
+                .path(getPath(request))
                 .build();
 
-        log.error("Unauthorized: {}", ex.getMessage());
-        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(errorResponse);
+        log.warn("Unauthorized: {}", ex.getMessage());
+
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
     }
 
-    /**
-     * Handle ForbiddenException and AccessDeniedException
-     */
+    // ------------------------------- FORBIDDEN -------------------------------
     @ExceptionHandler({ForbiddenException.class, AccessDeniedException.class})
-    @ResponseStatus(HttpStatus.FORBIDDEN)
-    public ResponseEntity<ErrorResponse> handleForbiddenException(
-            Exception ex, WebRequest request) {
+    public ResponseEntity<ErrorResponse> handleForbidden(Exception ex,
+                                                         WebRequest request) {
 
-        ErrorResponse errorResponse = ErrorResponse.builder()
+        ErrorResponse response = ErrorResponse.builder()
                 .timestamp(LocalDateTime.now())
                 .status(HttpStatus.FORBIDDEN.value())
                 .error("Forbidden")
                 .message(ex.getMessage())
-                .path(request.getDescription(false).replace("uri=", ""))
+                .path(getPath(request))
                 .build();
 
-        log.error("Forbidden: {}", ex.getMessage());
-        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(errorResponse);
+        log.warn("Access Denied: {}", ex.getMessage());
+
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
     }
 
-    /**
-     * Handle TokenRefreshException
-     */
+    // ------------------------------- TOKEN REFRESH ERROR -------------------------------
     @ExceptionHandler(TokenRefreshException.class)
-    @ResponseStatus(HttpStatus.FORBIDDEN)
-    public ResponseEntity<ErrorResponse> handleTokenRefreshException(
-            TokenRefreshException ex, WebRequest request) {
+    public ResponseEntity<ErrorResponse> handleTokenRefresh(TokenRefreshException ex,
+                                                            WebRequest request) {
 
-        ErrorResponse errorResponse = ErrorResponse.builder()
+        ErrorResponse response = ErrorResponse.builder()
                 .timestamp(LocalDateTime.now())
                 .status(HttpStatus.FORBIDDEN.value())
                 .error("Token Refresh Failed")
                 .message(ex.getMessage())
-                .path(request.getDescription(false).replace("uri=", ""))
+                .path(getPath(request))
                 .build();
 
-        log.error("Token refresh error: {}", ex.getMessage());
-        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(errorResponse);
+        log.warn("Token Refresh Failed: {}", ex.getMessage());
+
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
     }
 
-    /**
-     * Handle AuthenticationException (bad credentials)
-     */
+    // ------------------------------- AUTHENTICATION ERRORS -------------------------------
     @ExceptionHandler({AuthenticationException.class, BadCredentialsException.class})
-    @ResponseStatus(HttpStatus.UNAUTHORIZED)
-    public ResponseEntity<ErrorResponse> handleAuthenticationException(
-            Exception ex, WebRequest request) {
+    public ResponseEntity<ErrorResponse> handleAuthErrors(Exception ex,
+                                                          WebRequest request) {
 
-        ErrorResponse errorResponse = ErrorResponse.builder()
+        ErrorResponse response = ErrorResponse.builder()
                 .timestamp(LocalDateTime.now())
                 .status(HttpStatus.UNAUTHORIZED.value())
                 .error("Authentication Failed")
                 .message("Invalid username or password")
-                .path(request.getDescription(false).replace("uri=", ""))
+                .path(getPath(request))
                 .build();
 
-        log.error("Authentication failed: {}", ex.getMessage());
-        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(errorResponse);
+        log.warn("Authentication Failed: {}", ex.getMessage());
+
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
     }
 
-    /**
-     * Handle IllegalArgumentException
-     */
+    // ------------------------------- ILLEGAL ARGUMENT -------------------------------
     @ExceptionHandler(IllegalArgumentException.class)
-    @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public ResponseEntity<ErrorResponse> handleIllegalArgumentException(
-            IllegalArgumentException ex, WebRequest request) {
+    public ResponseEntity<ErrorResponse> handleIllegalArgument(IllegalArgumentException ex,
+                                                               WebRequest request) {
 
-        ErrorResponse errorResponse = ErrorResponse.builder()
+        ErrorResponse response = ErrorResponse.builder()
                 .timestamp(LocalDateTime.now())
                 .status(HttpStatus.BAD_REQUEST.value())
                 .error("Invalid Argument")
                 .message(ex.getMessage())
-                .path(request.getDescription(false).replace("uri=", ""))
+                .path(getPath(request))
                 .build();
 
-        log.error("Illegal argument: {}", ex.getMessage());
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
+        log.error("Illegal Argument", ex);
+
+        return ResponseEntity.badRequest().body(response);
     }
 
-    /**
-     * Handle IllegalStateException
-     */
+    // ------------------------------- ILLEGAL STATE -------------------------------
     @ExceptionHandler(IllegalStateException.class)
-    @ResponseStatus(HttpStatus.CONFLICT)
-    public ResponseEntity<ErrorResponse> handleIllegalStateException(
-            IllegalStateException ex, WebRequest request) {
+    public ResponseEntity<ErrorResponse> handleIllegalState(IllegalStateException ex,
+                                                            WebRequest request) {
 
-        ErrorResponse errorResponse = ErrorResponse.builder()
+        ErrorResponse response = ErrorResponse.builder()
                 .timestamp(LocalDateTime.now())
                 .status(HttpStatus.CONFLICT.value())
                 .error("Illegal State")
                 .message(ex.getMessage())
-                .path(request.getDescription(false).replace("uri=", ""))
+                .path(getPath(request))
                 .build();
 
-        log.error("Illegal state: {}", ex.getMessage());
-        return ResponseEntity.status(HttpStatus.CONFLICT).body(errorResponse);
+        log.error("Illegal State", ex);
+
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(response);
     }
 
-    /**
-     * Handle all other exceptions
-     */
+    // ------------------------------- GENERIC EXCEPTION -------------------------------
     @ExceptionHandler(Exception.class)
-    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
-    public ResponseEntity<ErrorResponse> handleGlobalException(
-            Exception ex, WebRequest request) {
+    public ResponseEntity<ErrorResponse> handleGeneral(Exception ex,
+                                                       WebRequest request) {
 
-        ErrorResponse errorResponse = ErrorResponse.builder()
+        ErrorResponse response = ErrorResponse.builder()
                 .timestamp(LocalDateTime.now())
                 .status(HttpStatus.INTERNAL_SERVER_ERROR.value())
                 .error("Internal Server Error")
                 .message("An unexpected error occurred")
-                .path(request.getDescription(false).replace("uri=", ""))
+                .path(getPath(request))
                 .build();
 
-        log.error("Unexpected error: ", ex);
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
+        log.error("Unexpected Exception", ex);
+
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
     }
 }
