@@ -1,4 +1,4 @@
-import { Role, type ManagerInfo, type Address, PayFrequency, TimesheetStatus } from "./common.types";
+import { Role, type ManagerInfo, type Address, PayFrequency, TimesheetStatus, PaymentMethod } from "./common.types";
 
 // Employee Response
 export interface EmployeeResponse {
@@ -61,7 +61,7 @@ export interface PayInfoResponse {
   salary: number;
   hourlyRate?: number;
   payFrequency: PayFrequency;
-  paymentMethod: PaymentMethodData;
+  paymentMethod: PaymentMethod;
   bankName?: string;
   maskedAccountNumber?: string;
   lastPayDate?: string;
