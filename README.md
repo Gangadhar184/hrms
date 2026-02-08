@@ -11,16 +11,40 @@ A comprehensive Human Resource Management System with modern frontend and robust
 
 ## Table of Contents
 
-- [Project Overview](#-project-overview)
-- [Architecture](#-architecture)
-- [Tech Stack](#-tech-stack)
-- [Features](#-features)
-- [API Documentation](#-api-documentation)
-- [Setup Instructions](#-setup-instructions)
-- [Running the Application](#-running-the-application)
-- [Project Structure](#-project-structure)
-- [User Roles & Permissions](#-user-roles--permissions)
-- [Screenshots](#-screenshots)
+- [🏢 HRMS - Human Resource Management System](#-hrms---human-resource-management-system)
+- [Project Overview](#project-overview)
+- [Architecture](#architecture)
+- [Tech Stack](#tech-stack)
+  - [Frontend](#frontend)
+  - [Backend](#backend)
+- [Features](#features)
+  - [Authentication & Security](#authentication--security)
+  - [Employee Management](#employee-management)
+  - [Timesheet Management](#timesheet-management)
+  - [Payroll Processing](#payroll-processing)
+  - [Manager Features](#manager-features)
+  - [Admin Features](#admin-features)
+- [📚 API Documentation](#-api-documentation)
+  - [Interactive API Documentation (Swagger UI)](#interactive-api-documentation-swagger-ui)
+  - [API Endpoints Overview](#api-endpoints-overview)
+- [Setup Instructions](#setup-instructions)
+  - [Prerequisites](#prerequisites)
+  - [Database Setup](#database-setup)
+  - [Backend Setup](#backend-setup)
+  - [Frontend Setup](#frontend-setup)
+- [Running the Application](#running-the-application)
+  - [Start Backend](#start-backend)
+  - [Start Frontend](#start-frontend)
+  - [Default Admin Account](#default-admin-account)
+- [Project Structure](#project-structure)
+  - [Backend (`/hrms`)](#backend-hrms)
+  - [Frontend (`/hrms-frontend`)](#frontend-hrms-frontend)
+- [User Roles & Permissions](#user-roles--permissions)
+  - [Timesheet Status Workflow](#timesheet-status-workflow)
+- [Screenshots](#screenshots)
+- [Security Features](#security-features)
+- [Contributing](#contributing)
+- [License](#license)
 
 ## Project Overview
 
@@ -111,51 +135,51 @@ flowchart TB
 
 ### Authentication & Security
 
--  JWT-based authentication with access and refresh tokens
--  Secure password hashing with BCrypt
--  Role-based access control (RBAC)
--  First-time login password reset enforcement
--  Multi-device logout support
+- JWT-based authentication with access and refresh tokens
+- Secure password hashing with BCrypt
+- Role-based access control (RBAC)
+- First-time login password reset enforcement
+- Multi-device logout support
 
 ### Employee Management
 
--  Complete employee profiles (personal, contact, pay info)
--  Employee creation with auto-generated credentials
--  Manager-employee hierarchy
--  Search and filter employees
--  Role management (Employee, Manager, Admin)
+- Complete employee profiles (personal, contact, pay info)
+- Employee creation with auto-generated credentials
+- Manager-employee hierarchy
+- Search and filter employees
+- Role management (Employee, Manager, Admin)
 
 ### Timesheet Management
 
--  Weekly timesheet format (Monday - Sunday)
--  Daily hours entry with descriptions
--  Hours validation (0-24 per day)
--  Draft save functionality
--  Submit for approval workflow
--  Denial with mandatory reason
--  Resubmission of denied timesheets
+- Weekly timesheet format (Monday - Sunday)
+- Daily hours entry with descriptions
+- Hours validation (0-24 per day)
+- Draft save functionality
+- Submit for approval workflow
+- Denial with mandatory reason
+- Resubmission of denied timesheets
 
 ### Payroll Processing
 
--  Payroll preview before execution
--  Automated payroll calculation
--  Overtime calculation (hours > 40/week)
--  Payroll history and reports
--  Mark payroll as paid
+- Payroll preview before execution
+- Automated payroll calculation
+- Overtime calculation (hours > 40/week)
+- Payroll history and reports
+- Mark payroll as paid
 
 ### Manager Features
 
--  View direct reports
--  Review team timesheets
--  Approve/Deny timesheets with comments
--  Team statistics dashboard
+- View direct reports
+- Review team timesheets
+- Approve/Deny timesheets with comments
+- Team statistics dashboard
 
 ### Admin Features
 
--  Full employee CRUD operations
--  Payroll administration
--  System-wide statistics
--  User management
+- Full employee CRUD operations
+- Payroll administration
+- System-wide statistics
+- User management
 
 ## 📚 API Documentation
 
