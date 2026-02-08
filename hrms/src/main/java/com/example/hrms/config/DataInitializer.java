@@ -35,7 +35,7 @@ public class DataInitializer {
 
             log.info("Initializing database with default users...");
 
-            // ==================== CREATE ADMIN ====================
+            // create admin
             Employee admin = Employee.builder()
                     .employeeId("EMP-20240101-0001")
                     .username("admin")
@@ -85,7 +85,7 @@ public class DataInitializer {
             log.info("   Password: Admin@123");
             log.info("   Role: ADMIN");
 
-            // ==================== CREATE MANAGER ====================
+            // create manager
             Employee manager = Employee.builder()
                     .employeeId("EMP-20240101-0002")
                     .username("manager")
@@ -131,12 +131,12 @@ public class DataInitializer {
                     .build();
             payInfoRepository.save(managerPay);
 
-            log.info("✅ MANAGER created:");
+            log.info("   MANAGER created:");
             log.info("   Username: manager");
             log.info("   Password: Manager@123");
             log.info("   Role: MANAGER");
 
-            // ==================== CREATE EMPLOYEE ====================
+            // create employee
             Employee employee = Employee.builder()
                     .employeeId("EMP-20240101-0003")
                     .username("employee")
@@ -182,7 +182,7 @@ public class DataInitializer {
                     .build();
             payInfoRepository.save(employeePay);
 
-            log.info("✅ EMPLOYEE created:");
+            log.info("   EMPLOYEE created:");
             log.info("   Username: employee");
             log.info("   Password: Employee@123");
             log.info("   Role: EMPLOYEE");

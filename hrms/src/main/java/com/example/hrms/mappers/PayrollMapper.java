@@ -1,15 +1,17 @@
 package com.example.hrms.mappers;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.time.LocalDate;
+import java.util.List;
+import java.util.stream.Collectors;
+
+import org.springframework.stereotype.Component;
+
 import com.example.hrms.dto.PayrollPreviewResponse;
 import com.example.hrms.dto.PayrollResponse;
 import com.example.hrms.models.Employee;
 import com.example.hrms.models.Payroll;
-import org.springframework.stereotype.Component;
-
-import java.math.BigDecimal;
-import java.time.LocalDate;
-import java.util.List;
-import java.util.stream.Collectors;
 
 @Component
 public class PayrollMapper {
@@ -83,8 +85,11 @@ public class PayrollMapper {
                 payroll.getEmployee().getPayInfo().getHourlyRate() != null &&
                 payroll.getEmployee().getPayInfo().getHourlyRate().compareTo(BigDecimal.ZERO) > 0) {
             hoursWorked = payroll.getGrossPay()
-                    .divide(payroll.getEmployee().getPayInfo().getHourlyRate(),
-                            2, BigDecimal.ROUND_HALF_UP);
+        .divide(
+                payroll.getEmployee().getPayInfo().getHourlyRate(),
+                2,
+                RoundingMode.HALF_UP
+        );
         }
 
         return PayrollPreviewResponse.EmployeePayrollInfo.builder()

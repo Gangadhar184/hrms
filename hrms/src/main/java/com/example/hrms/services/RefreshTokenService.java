@@ -27,13 +27,6 @@ public class RefreshTokenService {
     /**
      * Creates and stores a new refresh token for the specified employee.
      *
-     * <p>Steps:</p>
-     * <ol>
-     *     <li>Verify employee exists</li>
-     *     <li>Generate a random UUID token string</li>
-     *     <li>Calculate expiration date using configuration</li>
-     *     <li>Persist token in database</li>
-     * </ol>
      *
      * @param employeeId the ID of the employee for whom the token will be created
      * @return the newly created {@link RefreshToken}
@@ -79,12 +72,6 @@ public class RefreshTokenService {
 
     /**
      * Validates a refresh token by checking:
-     * <ul>
-     *     <li>If the token has expired</li>
-     *     <li>If the token has been revoked</li>
-     * </ul>
-     *
-     * <p>Expired tokens are automatically deleted.</p>
      *
      * @param token the refresh token to validate
      * @return the valid refresh token

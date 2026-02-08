@@ -35,15 +35,15 @@ public class TimesheetService {
 
     /**
      * Retrieves the current weekly timesheet for the employee associated with the given username.
-     * <p>
+     *
      * If a timesheet for the current week does not exist, a new one is automatically created.
-     * </p>
+     *
      *
      * @param username the username of the employee
      * @return the current week's {@link TimesheetResponse}
      * @throws ResourceNotFoundException if the employee is not found
      */
-    @Transactional(readOnly = true)
+    @Transactional
     public TimesheetResponse getCurrentTimesheet(String username) {
         log.debug("Fetching current timesheet for user: {}", username);
 
@@ -100,10 +100,6 @@ public class TimesheetService {
 
     /**
      * Updates the entries of an existing timesheet.
-     * <p>
-     * Existing entries are removed and replaced with the ones supplied in the request.
-     * Timesheets can only be updated while in editable statuses (e.g., DRAFT).
-     * </p>
      *
      * @param timesheetId the ID of the timesheet to update
      * @param request     the new timesheet details
@@ -215,6 +211,32 @@ public class TimesheetService {
         return pageMapper.toPageResponse(timesheetPage, timesheetMapper::toListResponse);
     }
 
+    /**
+     * Retrieves a timesheet by its ID for a manager (only if the employee is a direct report).
+     *
+     * @param timesheetId the ID of the timesheet
+     * @param managerId   the manager's employee ID
+     * @return a {@link TimesheetResponse} containing the timesheet details
+     * @throws ResourceNotFoundException if the timesheet is not found
+     * @throws BadRequestException       if the employee is not a direct report of the manager
+     */
+    @Transactional(readOnly = true)
+    public TimesheetResponse getTimesheetByIdForManager(Long timesheetId, Long managerId) {
+        log.debug("Fetching timesheet ID: {} for manager ID: {}", timesheetId, managerId);
+
+        Timesheet timesheet = timesheetRepository.findById(timesheetId)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Timesheet not found with ID: " + timesheetId));
+
+        // Verify the employee is a direct report of the manager
+        if (timesheet.getEmployee().getManager() == null ||
+                !timesheet.getEmployee().getManager().getId().equals(managerId)) {
+            throw new BadRequestException("You can only view timesheets of your direct reports");
+        }
+
+        return timesheetMapper.toResponse(timesheet);
+    }
+
 
     /**
      * Retrieves the number of pending timesheets awaiting the manager's review.
@@ -323,13 +345,9 @@ public class TimesheetService {
         return timesheetRepository.findApprovedTimesheetsByWeek(weekStartDate);
     }
 
-    /**
-     * Creates a new timesheet for the given employee and weekly period.
-     *
-     * @param employee      the employee for whom to create the timesheet
-     * @param weekStartDate the Monday date of the week
-     * @return the newly created {@link Timesheet}
-     */
+
+     // Creates a new timesheet for the given employee and weekly period.
+
     private Timesheet createNewTimesheet(Employee employee, LocalDate weekStartDate) {
         log.debug("Creating new timesheet for employee: {} for week: {}",
                 employee.getUsername(), weekStartDate);
@@ -346,11 +364,8 @@ public class TimesheetService {
         return timesheetRepository.save(timesheet);
     }
 
-    /**
-     * Calculates the Monday of the current week.
-     *
-     * @return the {@link LocalDate} representing the start of the current week
-     */
+
+     // Calculates the Monday of the current week.
     private LocalDate getCurrentWeekStartDate() {
         LocalDate today = LocalDate.now();
         return today.with(DayOfWeek.MONDAY);

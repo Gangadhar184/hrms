@@ -8,6 +8,12 @@ import com.example.hrms.repositories.EmployeeRepository;
 import com.example.hrms.services.EmployeeService;
 import com.example.hrms.services.TimesheetService;
 import com.example.hrms.utils.SecurityUtils;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -25,17 +31,21 @@ import java.util.List;
 @RequiredArgsConstructor
 @Slf4j
 @PreAuthorize("hasAnyRole('MANAGER', 'ADMIN')")
+@Tag(name = "Manager", description = "Manager operations for team management")
+@SecurityRequirement(name = "bearerAuth")
 public class ManagerController {
 
     private final EmployeeService employeeService;
     private final TimesheetService timesheetService;
     private final EmployeeRepository employeeRepository;
 
-    /**
-     * Get all employees reporting to manager
-     */
+    @Operation(summary = "Get direct reports", description = "Get all employees reporting to the current manager")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Direct reports retrieved successfully"),
+            @ApiResponse(responseCode = "401", description = "Not authenticated"),
+            @ApiResponse(responseCode = "403", description = "Not authorized (not a manager)")
+    })
     @GetMapping("/employees")
-
     public ResponseEntity<List<EmployeeResponse>> getDirectReports() {
         String username = SecurityUtils.getCurrentUsername()
                 .orElseThrow(() -> new IllegalStateException("User not authenticated"));
@@ -50,22 +60,19 @@ public class ManagerController {
         return ResponseEntity.ok(response);
     }
 
-    /**
-     * Get timesheets for direct reports
-     */
+    @Operation(summary = "Get team timesheets", description = "Get timesheets for direct reports with optional status filter")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Timesheets retrieved successfully"),
+            @ApiResponse(responseCode = "401", description = "Not authenticated"),
+            @ApiResponse(responseCode = "403", description = "Not authorized")
+    })
     @GetMapping("/timesheets")
-
     public ResponseEntity<PageResponse<TimesheetListResponse>> getTeamTimesheets(
-
-            @RequestParam(required = false, defaultValue = "SUBMITTED") TimesheetStatus status,
-
-            @RequestParam(defaultValue = "0") int page,
-
-            @RequestParam(defaultValue = "20") int size,
-
-            @RequestParam(defaultValue = "submittedAt") String sort,
-
-            @RequestParam(defaultValue = "asc") String direction) {
+            @Parameter(description = "Filter by status") @RequestParam(required = false, defaultValue = "SUBMITTED") TimesheetStatus status,
+            @Parameter(description = "Page number") @RequestParam(defaultValue = "0") int page,
+            @Parameter(description = "Page size") @RequestParam(defaultValue = "20") int size,
+            @Parameter(description = "Sort field") @RequestParam(defaultValue = "submittedAt") String sort,
+            @Parameter(description = "Sort direction") @RequestParam(defaultValue = "asc") String direction) {
 
         String username = SecurityUtils.getCurrentUsername()
                 .orElseThrow(() -> new IllegalStateException("User not authenticated"));
@@ -85,11 +92,13 @@ public class ManagerController {
         return ResponseEntity.ok(response);
     }
 
-    /**
-     * Get pending timesheets count
-     */
+    @Operation(summary = "Get pending timesheets count", description = "Get count of timesheets pending approval")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Count retrieved successfully"),
+            @ApiResponse(responseCode = "401", description = "Not authenticated"),
+            @ApiResponse(responseCode = "403", description = "Not authorized")
+    })
     @GetMapping("/timesheets/pending/count")
-
     public ResponseEntity<Long> getPendingTimesheetsCount() {
         String username = SecurityUtils.getCurrentUsername()
                 .orElseThrow(() -> new IllegalStateException("User not authenticated"));
@@ -104,12 +113,39 @@ public class ManagerController {
         return ResponseEntity.ok(count);
     }
 
-    /**
-     * Approve timesheet
-     */
-    @PostMapping("/timesheets/{timesheetId}/approve")
+    @Operation(summary = "Get timesheet details", description = "Get timesheet details by ID (for direct reports only)")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Timesheet retrieved successfully"),
+            @ApiResponse(responseCode = "404", description = "Timesheet not found"),
+            @ApiResponse(responseCode = "403", description = "Not authorized to view this timesheet"),
+            @ApiResponse(responseCode = "401", description = "Not authenticated")
+    })
+    @GetMapping("/timesheets/{timesheetId}")
+    public ResponseEntity<TimesheetResponse> getTimesheetById(
+            @Parameter(description = "Timesheet ID") @PathVariable Long timesheetId) {
+        String username = SecurityUtils.getCurrentUsername()
+                .orElseThrow(() -> new IllegalStateException("User not authenticated"));
 
-    public ResponseEntity<MessageResponse> approveTimesheet(@PathVariable Long timesheetId) {
+        Employee manager = employeeRepository.findByUsername(username)
+                .orElseThrow(() -> new ResourceNotFoundException("Manager not found"));
+
+        log.debug("Timesheet detail request for ID: {} by manager: {}", timesheetId, username);
+
+        TimesheetResponse response = timesheetService.getTimesheetByIdForManager(timesheetId, manager.getId());
+
+        return ResponseEntity.ok(response);
+    }
+
+    @Operation(summary = "Approve timesheet", description = "Approve a submitted timesheet")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Timesheet approved successfully"),
+            @ApiResponse(responseCode = "400", description = "Timesheet cannot be approved"),
+            @ApiResponse(responseCode = "404", description = "Timesheet not found"),
+            @ApiResponse(responseCode = "401", description = "Not authenticated")
+    })
+    @PostMapping("/timesheets/{timesheetId}/approve")
+    public ResponseEntity<MessageResponse> approveTimesheet(
+            @Parameter(description = "Timesheet ID") @PathVariable Long timesheetId) {
         String username = SecurityUtils.getCurrentUsername()
                 .orElseThrow(() -> new IllegalStateException("User not authenticated"));
 
@@ -120,13 +156,16 @@ public class ManagerController {
         return ResponseEntity.ok(response);
     }
 
-    /**
-     * Deny timesheet with reason
-     */
+    @Operation(summary = "Deny timesheet", description = "Deny a submitted timesheet with a reason")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Timesheet denied successfully"),
+            @ApiResponse(responseCode = "400", description = "Timesheet cannot be denied or reason not provided"),
+            @ApiResponse(responseCode = "404", description = "Timesheet not found"),
+            @ApiResponse(responseCode = "401", description = "Not authenticated")
+    })
     @PostMapping("/timesheets/{timesheetId}/deny")
-
     public ResponseEntity<MessageResponse> denyTimesheet(
-            @PathVariable Long timesheetId,
+            @Parameter(description = "Timesheet ID") @PathVariable Long timesheetId,
             @Valid @RequestBody DenyTimesheetRequest request) {
         String username = SecurityUtils.getCurrentUsername()
                 .orElseThrow(() -> new IllegalStateException("User not authenticated"));
@@ -138,11 +177,13 @@ public class ManagerController {
         return ResponseEntity.ok(response);
     }
 
-    /**
-     * Get manager statistics
-     */
+    @Operation(summary = "Get manager statistics", description = "Get statistics about team timesheets and approvals")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Statistics retrieved successfully"),
+            @ApiResponse(responseCode = "401", description = "Not authenticated"),
+            @ApiResponse(responseCode = "403", description = "Not authorized")
+    })
     @GetMapping("/statistics")
-
     public ResponseEntity<ManagerStatistics> getStatistics() {
         String username = SecurityUtils.getCurrentUsername()
                 .orElseThrow(() -> new IllegalStateException("User not authenticated"));
@@ -163,9 +204,7 @@ public class ManagerController {
         return ResponseEntity.ok(stats);
     }
 
-    /**
-     * Manager statistics DTO
-     */
+
     @lombok.Data
     @lombok.Builder
     @lombok.NoArgsConstructor

@@ -1,7 +1,5 @@
 package com.example.hrms.dto;
 
-import lombok.Data;
-
 import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
 import lombok.Builder;

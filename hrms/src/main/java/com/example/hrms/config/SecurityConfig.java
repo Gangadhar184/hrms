@@ -44,9 +44,7 @@ public class SecurityConfig {
         return new BCryptPasswordEncoder(12);
     }
 
-    /**
-     * Authentication provider
-     */
+
     @Bean
     public AuthenticationProvider authenticationProvider() {
         DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
@@ -55,25 +53,18 @@ public class SecurityConfig {
         return authProvider;
     }
 
-    /**
-     * Authentication manager
-     */
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration config)
             throws Exception {
         return config.getAuthenticationManager();
     }
 
-    /**
-     * CORS configuration
-     */
+    //cors config
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
         configuration.setAllowedOrigins(Arrays.asList(
-                "http://localhost:5173",
-                "http://localhost:4200",
-                "http://localhost:8080"
+                "http://localhost:5173"
         ));
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
         configuration.setAllowedHeaders(Arrays.asList("*"));
@@ -86,9 +77,6 @@ public class SecurityConfig {
         return source;
     }
 
-    /**
-     * Security filter chain
-     */
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
@@ -114,6 +102,9 @@ public class SecurityConfig {
                         // Public endpoints - Authentication
                         .requestMatchers("/api/auth/**").permitAll()
 
+                        // Swagger UI and OpenAPI endpoints
+                        .requestMatchers("/swagger-ui/**", "/swagger-ui.html", "/v3/api-docs/**", "/v3/api-docs.yaml").permitAll()
+
                         // Health check endpoints
                         .requestMatchers("/actuator/health").permitAll()
 
@@ -138,11 +129,7 @@ public class SecurityConfig {
                         // All other requests must be authenticated
                         .anyRequest().authenticated()
                 )
-
-                // Add authentication provider
                 .authenticationProvider(authenticationProvider())
-
-                // Add JWT filter before UsernamePasswordAuthenticationFilter
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
