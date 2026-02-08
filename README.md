@@ -32,112 +32,48 @@ HRMS is a full-stack application designed to streamline HR operations including:
 - **Role-Based Access** - Three distinct roles with specific permissions
 - **Secure Authentication** - JWT-based authentication with refresh tokens
 
-## 🏗️ Architecture - Complete System Flow
+## Architecture
 
 ```mermaid
-sequenceDiagram
-    autonumber
-    participant User as 👤 User
-    participant UI as 🖥️ React UI<br/>(shadcn/ui + Tailwind)
-    participant Router as 🔀 React Router<br/>(Protected Routes)
-    participant Query as 📦 TanStack Query<br/>(Cache + State)
-    participant Axios as 🌐 Axios Client<br/>(HTTP Interceptors)
-    participant Security as 🔐 Spring Security<br/>(JWT Filter)
-    participant Controller as 🎮 REST Controllers
-    participant Service as ⚙️ Business Services
-    participant JPA as 📊 Spring Data JPA
-    participant DB as 🗄️ PostgreSQL
-
-    rect rgb(240, 248, 255)
-        Note over User,DB: 🔑 AUTHENTICATION FLOW
-        User->>UI: 1. Enter username & password
-        UI->>Axios: 2. POST /api/auth/login
-        Axios->>Security: 3. Request (no token required)
-        Security->>Controller: 4. AuthController.login()
-        Controller->>Service: 5. AuthService.authenticate()
-        Service->>JPA: 6. Find user by username
-        JPA->>DB: 7. SELECT * FROM employees
-        DB-->>JPA: 8. Employee entity
-        JPA-->>Service: 9. User details
-        Service->>Service: 10. Validate password (BCrypt)
-        Service->>Service: 11. Generate JWT tokens
-        Service-->>Controller: 12. AuthResponse (tokens + user)
-        Controller-->>Security: 13. HTTP 200 OK
-        Security-->>Axios: 14. Response with tokens
-        Axios->>Axios: 15. Store tokens in localStorage
-        Axios-->>UI: 16. Login success
-        UI->>Router: 17. Navigate to /dashboard
-        Router-->>User: 18. Show Dashboard
+flowchart TB
+    subgraph Client["🖥️ Frontend - React + TypeScript"]
+        UI[UI Components<br/>shadcn/ui + Tailwind]
+        Router[React Router v7<br/>Protected Routes]
+        Query[TanStack Query<br/>Cache & State]
+        Auth[Auth Context<br/>JWT Storage]
     end
 
-    rect rgb(255, 248, 240)
-        Note over User,DB: 📋 EMPLOYEE TIMESHEET FLOW
-        User->>UI: 19. Navigate to Timesheet
-        Router->>Router: 20. Check ProtectedRoute (isAuthenticated?)
-        UI->>Query: 21. useCurrentTimesheet() hook
-        Query->>Axios: 22. GET /api/employee/timesheet/current
-        Axios->>Axios: 23. Attach Bearer token (interceptor)
-        Axios->>Security: 24. Request + Authorization header
-        Security->>Security: 25. Extract & validate JWT
-        Security->>Controller: 26. TimesheetController.getCurrentTimesheet()
-        Controller->>Service: 27. TimesheetService.getCurrentTimesheet()
-        Service->>JPA: 28. Find timesheet for current week
-        JPA->>DB: 29. SELECT with employee_id & week_start
-        DB-->>JPA: 30. Timesheet + entries
-        JPA-->>Service: 31. Timesheet entity
-        Service-->>Controller: 32. TimesheetResponse DTO
-        Controller-->>Security: 33. HTTP 200 OK
-        Security-->>Axios: 34. JSON response
-        Axios-->>Query: 35. Cache response data
-        Query-->>UI: 36. Render timesheet form
-        UI-->>User: 37. Display weekly timesheet
+    subgraph API["🌐 API Layer"]
+        Axios[Axios Client<br/>Interceptors]
     end
 
-    rect rgb(240, 255, 240)
-        Note over User,DB: ✅ MANAGER APPROVAL FLOW
-        User->>UI: 38. Manager reviews timesheet
-        UI->>Query: 39. useApproveTimesheet() mutation
-        Query->>Axios: 40. POST /api/manager/timesheets/{id}/approve
-        Axios->>Security: 41. Request + JWT (ROLE_MANAGER)
-        Security->>Security: 42. Validate role authorization
-        Security->>Controller: 43. ManagerController.approveTimesheet()
-        Controller->>Service: 44. TimesheetService.approveTimesheet()
-        Service->>JPA: 45. Update status to APPROVED
-        JPA->>DB: 46. UPDATE timesheets SET status='APPROVED'
-        DB-->>JPA: 47. Success
-        JPA-->>Service: 48. Updated entity
-        Service-->>Controller: 49. TimesheetResponse
-        Controller-->>Security: 50. HTTP 200 OK
-        Security-->>Axios: 51. Success response
-        Axios-->>Query: 52. Invalidate cache
-        Query-->>UI: 53. Refetch team timesheets
-        UI-->>User: 54. Show success toast
+    subgraph Server["⚙️ Backend - Spring Boot"]
+        Security[Spring Security<br/>JWT Filter]
+        Controllers[REST Controllers]
+        Services[Business Services]
+        Mappers[DTO Mappers]
     end
 
-    rect rgb(255, 240, 245)
-        Note over User,DB: 💰 ADMIN PAYROLL FLOW
-        User->>UI: 55. Admin runs payroll
-        UI->>Query: 56. useRunPayroll() mutation
-        Query->>Axios: 57. POST /api/admin/payroll/run
-        Axios->>Security: 58. Request + JWT (ROLE_ADMIN)
-        Security->>Security: 59. Validate ADMIN role
-        Security->>Controller: 60. AdminPayrollController.runPayroll()
-        Controller->>Service: 61. PayrollService.runPayroll()
-        Service->>JPA: 62. Get approved timesheets
-        JPA->>DB: 63. SELECT approved timesheets
-        DB-->>JPA: 64. Timesheet list
-        Service->>Service: 65. Calculate pay (hours × rate)
-        Service->>JPA: 66. Create payroll records
-        JPA->>DB: 67. INSERT INTO payrolls
-        DB-->>JPA: 68. Payroll entities
-        JPA-->>Service: 69. Created payrolls
-        Service-->>Controller: 70. RunPayrollResponse
-        Controller-->>Security: 71. HTTP 200 OK
-        Security-->>Axios: 72. Payroll results
-        Axios-->>Query: 73. Update cache
-        Query-->>UI: 74. Display results
-        UI-->>User: 75. Show payroll summary
+    subgraph Data["🗄️ Data Layer"]
+        JPA[Spring Data JPA]
+        DB[(PostgreSQL)]
     end
+
+    UI --> Router
+    Router --> Query
+    Query --> Axios
+    Auth -.->|Bearer Token| Axios
+    Axios <-->|HTTP/REST| Security
+    Security --> Controllers
+    Controllers --> Services
+    Services --> Mappers
+    Services --> JPA
+    JPA <--> DB
+
+    style Client fill:#e3f2fd
+    style API fill:#fff3e0
+    style Server fill:#e8f5e9
+    style Data fill:#fce4ec
 ```
 
 ## Tech Stack
