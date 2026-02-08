@@ -48,6 +48,18 @@ export const usePendingTimesheetsCount = () => {
 };
 
 /**
+ * Hook to get timesheet details by ID (for manager's direct reports)
+ */
+export const useTimesheetByIdForManager = (timesheetId?: number) => {
+  return useQuery({
+    queryKey: ['manager', 'timesheets', timesheetId],
+    queryFn: () => managerServices.getTimesheetById(timesheetId!),
+    enabled: !!timesheetId,
+    staleTime: 1 * 60 * 1000, // 1 minute
+  });
+};
+
+/**
  * Hook to approve timesheet
  */
 export const useApproveTimesheet = () => {

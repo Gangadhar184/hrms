@@ -12,6 +12,7 @@ import type {
 import { AxiosError } from 'axios';
 
 import authServices from '@/api/services/authServices';
+import { useAuth } from '@/contexts/AuthContext';
 
 /**
  * Hook for login mutation
@@ -19,10 +20,14 @@ import authServices from '@/api/services/authServices';
 export const useLogin = (): UseMutationResult<AuthResponse, AxiosError<ErrorResponse>, LoginRequest> => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const { login } = useAuth();
 
   return useMutation({
     mutationFn: (credentials: LoginRequest) => authServices.login(credentials),
     onSuccess: (data: AuthResponse) => {
+      // Update AuthContext with the logged in user
+      login(data.employee);
+
       // Check if password reset required
       if (data.employee.isFirstLogin) {
         toast.success('Login successful! Please reset your password.');
@@ -46,6 +51,7 @@ export const useLogin = (): UseMutationResult<AuthResponse, AxiosError<ErrorResp
 export const useLogout = (): UseMutationResult<void, AxiosError<ErrorResponse>, void> => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const { logout } = useAuth();
 
   return useMutation({
     mutationFn: () => {
@@ -56,6 +62,8 @@ export const useLogout = (): UseMutationResult<void, AxiosError<ErrorResponse>, 
       return authServices.logout(refreshToken);
     },
     onSuccess: () => {
+      // Clear auth context
+      logout();
       // Clear all queries
       queryClient.clear();
       toast.success('Logged out successfully');
@@ -63,6 +71,7 @@ export const useLogout = (): UseMutationResult<void, AxiosError<ErrorResponse>, 
     },
     onError: (error) => {
       // Still logout locally even if API fails
+      logout();
       queryClient.clear();
       navigate('/login');
       console.error('Logout error:', error);
@@ -76,15 +85,18 @@ export const useLogout = (): UseMutationResult<void, AxiosError<ErrorResponse>, 
 export const useLogoutAll = (): UseMutationResult<MessageResponse, AxiosError<ErrorResponse>, void> => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const { logout } = useAuth();
 
   return useMutation({
     mutationFn: () => authServices.logoutAll(),
     onSuccess: () => {
+      logout();
       queryClient.clear();
       toast.success('Logged out from all devices');
       navigate('/login');
     },
     onError: () => {
+      logout();
       queryClient.clear();
       navigate('/login');
       toast.error('Logout error, but logged out locally');
@@ -97,10 +109,13 @@ export const useLogoutAll = (): UseMutationResult<MessageResponse, AxiosError<Er
  */
 export const useResetPassword = (): UseMutationResult<MessageResponse, AxiosError<ErrorResponse>, ResetPasswordRequest> => {
   const navigate = useNavigate();
+  const { updateUser } = useAuth();
 
   return useMutation({
     mutationFn: (data: ResetPasswordRequest) => authServices.resetPassword(data),
     onSuccess: () => {
+      // Update isFirstLogin to false in context
+      updateUser({ isFirstLogin: false });
       toast.success('Password reset successfully!');
       navigate('/dashboard');
     },

@@ -2,6 +2,7 @@ import apiClient from '../client';
 import type {
   EmployeeResponse,
   TimesheetListResponse,
+  TimesheetResponse,
   PageResponse,
   TeamTimesheetParams,
   MessageResponse,
@@ -37,6 +38,16 @@ class ManagerService {
 
     const response = await apiClient.get<PageResponse<TimesheetListResponse>>(
       `/manager/timesheets?${queryParams}`
+    );
+    return response.data;
+  }
+
+  /**
+   * Get timesheet details by ID (for direct reports)
+   */
+  async getTimesheetById(timesheetId: number): Promise<TimesheetResponse> {
+    const response = await apiClient.get<TimesheetResponse>(
+      `/manager/timesheets/${timesheetId}`
     );
     return response.data;
   }
